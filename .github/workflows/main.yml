@@ -1,0 +1,31 @@
+name: Test Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main  # Adjust to your main branch
+
+jobs:
+  test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        echo "StrictHostKeyChecking no" >> ~/.ssh/config
+
+    - name: Test SSH Connection and Run Commands
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+          echo "Connected to EC2 Instance"
+          uptime  # Check the uptime of the instance
+          # You can add more commands here, e.g., creating a test file
+          echo "This is a test file" > /tmp/test-file.txt
+          cat /tmp/test-file.txt  # Display the contents of the test file
+        EOF
